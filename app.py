@@ -18,7 +18,6 @@ app.config.from_object(Config)
 CORS(app, resources={r"/rest/*": {"origins": [app.config['ALLOWED_DOMAINS']]}})
 
 ## Initialize MySQL
-app.config["MYSQL_CURSORCLASS"] = "DictCursor"
 mysql = MySQL(app)
 
 ## Error handler
@@ -40,7 +39,7 @@ def handle_error(e):
 
 # Execute SQL query and return results
 def execute_query(sql, params=None):
-    cur = mysql.connection.cursor()
+    cur = mysql.connection.cursor(dictionary=True)
     if params:
         cur.execute(sql, params)
     else:
