@@ -18,6 +18,7 @@ app.config.from_object(Config)
 CORS(app, resources={r"/rest/*": {"origins": [app.config['ALLOWED_DOMAINS']]}})
 
 ## Initialize MySQL
+app.config["MYSQL_CURSORCLASS"] = "DictCursor"
 mysql = MySQL(app)
 
 ## Error handler
