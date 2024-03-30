@@ -56,9 +56,14 @@ def execute_query(sql, params=None):
 def require_api_key(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        request_api_key = request.headers.get('x-api-key')
-        if request_api_key not in app.config['API_KEYS']:
-            response = {'status': 401, 'message': 'Invalid API Key'}
+        request_token = request.headers.get('x-api-token')
+        api_tokens = os.getenv('API_TOKEN')
+        if api_tokens is None:
+            response = {'status': 401, 'message': 'Uauthorized: API Token not set'}
+            return jsonify(response), 401
+        
+        if request_token not in api_tokens:
+            response = {'status': 401, 'message': 'Unauthorized: Invalid API Token'}
             return jsonify(response), 401
         return func(*args, **kwargs)
     return wrapper
