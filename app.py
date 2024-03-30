@@ -1,8 +1,9 @@
-
+import os
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_mysqldb import MySQL
+from functools import wraps
 from werkzeug.exceptions import HTTPException
 
 # Load environment variables from .env file
@@ -15,7 +16,7 @@ from config import Config
 app.config.from_object(Config)
 
 ## Initialize CORS
-CORS(app, resources={r"/rest/*": {"origins": [app.config['ALLOWED_DOMAINS']]}})
+CORS(app, resources={r"/rest/*": {"origins": app.config['ALLOWED_DOMAINS']}})
 
 ## Initialize MySQL
 mysql = MySQL(app)
@@ -52,8 +53,20 @@ def execute_query(sql, params=None):
     cur.close()
     return result
 
+def require_api_token(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        request_token = request.headers.get('x-api-key')
+        api_tokens = [app.config['API_KEYS']]
+        if request_token not in api_tokens:
+            response = {'status': 401, 'message': 'Unauthorized: Invalid API token'}
+            return jsonify(response), 401
+        return func(*args, **kwargs)
+    return wrapper
+
 # Custom query endpoint
 @app.route('/rest/query', methods=['POST'])
+@require_api_token
 def custom_query():
     data = request.json
     if 'query' not in data:
@@ -66,6 +79,7 @@ def custom_query():
 
 # Create a new record
 @app.route('/rest/query/<table>', methods=['POST'])
+@require_api_token
 def add_record(table):
     data = request.json
     fields = ', '.join(data.keys())
@@ -78,6 +92,7 @@ def add_record(table):
 
 # Retrieve records
 @app.route('/rest/query/<table>', methods=['GET'])
+@require_api_token
 def get_records(table):
     sql = f"SELECT * FROM {table}"
     records = execute_query(sql)
@@ -86,6 +101,7 @@ def get_records(table):
 
 # Retrieve a single record
 @app.route('/rest/query/<table>/<field>/<value>', methods=['GET'])
+@require_api_token
 def get_record(table, field, value):
     sql = f"SELECT * FROM {table} WHERE {field} = %s"
     record = execute_query(sql, (value,))
@@ -98,6 +114,7 @@ def get_record(table, field, value):
     
 # Update a record
 @app.route('/api/<table>/<field>/<value>', methods=['PUT'])
+@require_api_token
 def update_record(table, field, value):
     data = request.json
     fields = ', '.join([f"{key} = %s" for key in data.keys()])
@@ -109,6 +126,7 @@ def update_record(table, field, value):
 
 # Delete a record
 @app.route('/api/<table>/<field>/<value>', methods=['DELETE'])
+@require_api_token
 def delete_record(table, field, value):
     sql = f"DELETE FROM {table} WHERE {field} = %s"
     execute_query(sql, (value,))
@@ -116,6 +134,7 @@ def delete_record(table, field, value):
     return jsonify(response), 200
 
 @app.route('/')
+@require_api_token
 def hello_world():
     return jsonify({"message": "Hello, World!"})
 

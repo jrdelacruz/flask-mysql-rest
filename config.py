@@ -4,7 +4,8 @@ class Config:
     SERVER_PORT = os.getenv('SERVER_PORT', 5000)
     DEBUG = os.getenv('DEBUG', True)
     MYSQL_CURSORCLASS = os.getenv('MYSQL_CURSORCLASS', 'DictCursor')
-    ALLOWED_DOMAINS = os.getenv('ALLOWED_DOMAINS', '*')
+    ALLOWED_DOMAINS = os.getenv('ALLOWED_DOMAINS', ['*'])
+    API_KEYS = os.getenv('API_KEYS', ['secret'])
     
     ## MySQL configurations
     MYSQL_HOST = os.getenv('MYSQL_HOST', 'localhost')
