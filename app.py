@@ -53,20 +53,19 @@ def execute_query(sql, params=None):
     cur.close()
     return result
 
-def require_api_token(func):
+def require_api_key(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        request_token = request.headers.get('x-api-key')
-        api_tokens = [app.config['API_KEYS']]
-        if request_token not in api_tokens:
-            response = {'status': 401, 'message': 'Unauthorized: Invalid API token'}
+        request_api_key = request.headers.get('x-api-key')
+        if request_api_key not in app.config['API_KEYS']:
+            response = {'status': 401, 'message': 'Invalid API Key'}
             return jsonify(response), 401
         return func(*args, **kwargs)
     return wrapper
 
 # Custom query endpoint
 @app.route('/rest/query', methods=['POST'])
-@require_api_token
+@require_api_key
 def custom_query():
     data = request.json
     if 'query' not in data:
@@ -79,7 +78,7 @@ def custom_query():
 
 # Create a new record
 @app.route('/rest/query/<table>', methods=['POST'])
-@require_api_token
+@require_api_key
 def add_record(table):
     data = request.json
     fields = ', '.join(data.keys())
@@ -92,7 +91,7 @@ def add_record(table):
 
 # Retrieve records
 @app.route('/rest/query/<table>', methods=['GET'])
-@require_api_token
+@require_api_key
 def get_records(table):
     sql = f"SELECT * FROM {table}"
     records = execute_query(sql)
@@ -101,7 +100,7 @@ def get_records(table):
 
 # Retrieve a single record
 @app.route('/rest/query/<table>/<field>/<value>', methods=['GET'])
-@require_api_token
+@require_api_key
 def get_record(table, field, value):
     sql = f"SELECT * FROM {table} WHERE {field} = %s"
     record = execute_query(sql, (value,))
@@ -114,7 +113,7 @@ def get_record(table, field, value):
     
 # Update a record
 @app.route('/api/<table>/<field>/<value>', methods=['PUT'])
-@require_api_token
+@require_api_key
 def update_record(table, field, value):
     data = request.json
     fields = ', '.join([f"{key} = %s" for key in data.keys()])
@@ -126,7 +125,7 @@ def update_record(table, field, value):
 
 # Delete a record
 @app.route('/api/<table>/<field>/<value>', methods=['DELETE'])
-@require_api_token
+@require_api_key
 def delete_record(table, field, value):
     sql = f"DELETE FROM {table} WHERE {field} = %s"
     execute_query(sql, (value,))
@@ -134,7 +133,7 @@ def delete_record(table, field, value):
     return jsonify(response), 200
 
 @app.route('/')
-@require_api_token
+@require_api_key
 def hello_world():
     return jsonify({"message": "Hello, World!"})
 
