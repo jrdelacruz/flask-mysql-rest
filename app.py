@@ -39,7 +39,7 @@ def handle_error(e):
 
 # Execute SQL query and return results
 def execute_query(sql, params=None):
-    cur = mysql.connection.cursor(dictionary=True)
+    cur = mysql.connection.cursor()
     if params:
         cur.execute(sql, params)
     else:
