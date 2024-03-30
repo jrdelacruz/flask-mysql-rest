@@ -62,6 +62,10 @@ def require_api_key(func):
             response = {'status': 401, 'message': 'Uauthorized: API Token not set'}
             return jsonify(response), 401
         
+        if request_token is None:
+            response = {'status': 401, 'message': 'Unauthorized: API Token is required'}
+            return jsonify(response), 401
+        
         if request_token not in api_tokens:
             response = {'status': 401, 'message': 'Unauthorized: Invalid API Token'}
             return jsonify(response), 401
