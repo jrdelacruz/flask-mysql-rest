@@ -57,7 +57,7 @@ def require_api_key(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         request_token = request.headers.get('x-api-token')
-        api_tokens = os.getenv('API_TOKEN')
+        api_tokens = os.getenv('API_KEYS')
         if api_tokens is None:
             response = {'status': 401, 'message': 'Uauthorized: API Token not set'}
             return jsonify(response), 401
