@@ -59,15 +59,15 @@ def require_api_key(func):
         request_key = request.headers.get('x-api-key')
         api_keys = os.getenv('API_KEYS')
         if api_keys is None:
-            response = {'status': 401, 'message': 'Uauthorized: API Token not set'}
+            response = {'status': 401, 'data': None, 'message': 'Uauthorized: API Token not set'}
             return jsonify(response), 401
         
         if request_key is None:
-            response = {'status': 401, 'message': 'Unauthorized: API Token is required'}
+            response = {'status': 401, 'data': None, 'message': 'Unauthorized: API Token is required'}
             return jsonify(response), 401
         
         if request_key not in api_keys:
-            response = {'status': 401, 'message': 'Unauthorized: Invalid API Token'}
+            response = {'status': 401, 'data': None, 'message': 'Unauthorized: Invalid API Token'}
             return jsonify(response), 401
         return func(*args, **kwargs)
     return wrapper
@@ -78,11 +78,11 @@ def require_api_key(func):
 def custom_query():
     data = request.json
     if 'query' not in data:
-        response = {'status': 400, 'message': 'Please provide a query in the JSON data'}
+        response = {'status': 400, 'data': None, 'message': 'Please provide a query in the JSON data'}
         return jsonify(response), 400
     sql = data['query']
     result = execute_query(sql)
-    response = {'data': result, 'status': 200, 'message': 'Custom query executed successfully'}
+    response = {'status': 200, 'data': result, 'message': 'Custom query executed successfully'}
     return jsonify(response), 200
 
 # Create a new record
@@ -95,7 +95,7 @@ def add_record(table):
     sql = f"INSERT INTO {table} ({fields}) VALUES ({values_template})"
     params = tuple(data.values())
     execute_query(sql, params)
-    response = {'data': data, 'status': 201, 'message': 'Record created successfully'}
+    response = {'status': 201, 'data': data, 'message': 'Record created successfully'}
     return jsonify(response), 201
 
 # Retrieve records
@@ -104,7 +104,7 @@ def add_record(table):
 def get_records(table):
     sql = f"SELECT * FROM {table}"
     records = execute_query(sql)
-    response = {'data': records, 'status': 200, 'message': 'Records retrieved successfully'}
+    response = { 'status': 200, 'data': records, 'message': 'Records retrieved successfully'}
     return jsonify(response), 200
 
 # Retrieve a single record
@@ -114,10 +114,10 @@ def get_record(table, field, value):
     sql = f"SELECT * FROM {table} WHERE {field} = %s"
     record = execute_query(sql, (value,))
     if record:
-        response = {'data': record, 'status': 200, 'message': 'Record retrieved successfully'}
+        response = {'status': 200, 'data': record, 'message': 'Record retrieved successfully'}
         return jsonify(response), 200
     else:
-        response = {'status': 404, 'message': 'Record not found'}
+        response = {'status': 404, 'data': None, 'message': 'Record not found'}
         return jsonify(response), 404
     
 # Update a record
@@ -129,7 +129,7 @@ def update_record(table, field, value):
     sql = f"UPDATE {table} SET {fields} WHERE {field} = %s"
     params = tuple(data.values()) + (value,)
     execute_query(sql, params)
-    response = {'status': 200, 'message': 'Record updated successfully'}
+    response = {'status': 200, 'data': data, 'message': 'Record updated successfully'}
     return jsonify(response), 200
 
 # Delete a record
@@ -138,7 +138,7 @@ def update_record(table, field, value):
 def delete_record(table, field, value):
     sql = f"DELETE FROM {table} WHERE {field} = %s"
     execute_query(sql, (value,))
-    response = {'status': 200, 'message': 'Record deleted successfully'}
+    response = {'status': 200, 'data': None, 'message': 'Record deleted successfully'}
     return jsonify(response), 200
 
 @app.route('/')
